@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style type="text/css">
+		* {
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		.box {
+			width: 500px;
+			height: 200px;
+			border: 1px solid #ccc;
+			margin: 50px auto;
+			overflow: hidden;
+			position: relative;
+		}
+
+		.box ul {
+			height: 100%;
+			width: 3000px;
+			position: relative;
+		}
+		.box li {
+			float: left;
+		}
+
+		.box ol {
+			position: absolute;
+			bottom: 5px;
+			right: 0;
+		}
+
+		.box ol li {
+			width: 25px;
+			height: 25px;
+			background-color: #fff;
+			text-align: center;
+			line-height: 25px;
+			color: orange;
+			margin-right: 5px;
+			cursor: pointer;
+		}
+		.box ol li:last-child {
+			margin-right: 0;
+		}
+		.pages {
+			display: none;
+		}
+		.pages a {
+			width: 40px;
+			height: 60px;
+			background-color: rgba(0,0,0,.5);
+			display: block;
+			text-align: center;
+			line-height: 60px;
+			color: #fff;
+			font-size: 20px;
+			position: absolute;
+			top: 50%;
+			margin-top: -30px;
+			text-decoration: none;
+		}
+
+		.pages a:last-child {
+			right: 0;
+		}
+
+		.box ol li.current {
+			background-color: green;
+			color: red;
+		}
+	</style>
+</head>
+<body>
+	
+	 <div class="box">
+	 	 <ul>
+	 	 	<li><a href="#"><img src="img/wf1.jpg" alt=""></a></li>
+	 	 	<li><a href="#"><img src="img/wf2.jpg" alt=""></a></li>
+	 	 	<li><a href="#"><img src="img/wf3.jpg" alt=""></a></li>
+	 	 	<li><a href="#"><img src="img/wf4.jpg" alt=""></a></li>
+	 	 	<li><a href="#"><img src="img/wf5.jpg" alt=""></a></li>
+	 	 </ul>
+	 	 <!-- 显示图片个数 -->
+	 	 <ol>
+	 	 </ol>
+
+	 	 <!-- 上一页，下一页 -->
+	 	 <div class="pages">
+	 	 	 <a href="javascript:void(0)" class="pageLeft">&lt;</a>
+	 	 	 <a href="javascript:void(0)" class="pageRight">&gt;</a>
+	 	 </div>
+	 </div>
+	
+	<!-- 1. 准备好动画 -->
+	<script type="text/javascript" src="animate.js"></script>
+	<script type="text/javascript">
+		var ul = document.querySelector("ul");
+		var ol = document.querySelector("ol");
+		var box = document.querySelector(".box");
+		var pages = document.querySelector(".pages");
+		var img_width = ul.children[0].clientWidth;
+		//上一页
+		var pageLeft = document.querySelector('.pageLeft');
+		// 下一页
+		var pageRight = document.querySelector('.pageRight');
+
+		//页面中li标签的个数
+		var li_count = ul.children.length;
+
+		// 1.根据页面中的li个数动态生成图片页面
+		for(var i = 0; i < li_count; i++) {
+		   // 2.动态创建ol中的li
+		   var li = document.createElement("li");
+		   li.innerHTML = i+1;
+		   // 3.将li添加到ol中
+		   ol.appendChild(li);
+		   //如果当前页码是0，那么第一个默认高亮被选中
+		   if(i == 0) {
+		   	 li.classList.add('current');
+		   }
+		   //记录一个索引值
+		   li.index = i;
+		   //5.给li设置点击事件
+		   li.onclick = liClick;
+		}
+
+		var index = 0;
+		//点击li时候的事件
+		function liClick() {
+			//获取当前li的索引(this.index)
+			index = this.index;
+			//让ul向左移动
+			animate(ul, -index*img_width);
+			//当前当前点击标签实现高亮显示
+			for(var i = 0; i < ol.children.length; i++) {
+				ol.children[i].classList.remove('current');
+			}
+			this.classList.add('current');
+		}
+
+
+		// 4.鼠标移动到盒子上显示按钮，鼠标离开隐藏按钮
+		box.onmouseenter = function() {
+			pages.style.display = 'block';
+
+			//停止定时器
+			clearInterval(timeId);
+		}
+		box.onmouseleave = function() {
+			pages.style.display = 'none';
+
+			timeId = setInterval(function(){
+
+				pageRight.click();
+				
+			},2000);
+		}
+		//点击下一页
+		pageRight.onclick = function() {
+			//判断当前是否是克隆的元素，如果索引位置是5
+			//那么就将ul的位置还原到开始位置，并且索引改为0
+			if(index == li_count) {
+				ul.style.left = '0px';
+				index = 0;
+			}
+			//获取当前被选中的li的索引
+			index++;
+			animate(ul,-index*img_width);
+			//当前当前点击标签实现高亮显示
+			for(var i = 0; i < ol.children.length; i++) {
+				ol.children[i].classList.remove('current');
+			}
+			if(index >= li_count) {
+				ol.children[0].classList.add('current');
+			}else {
+				ol.children[index].classList.add('current');
+			}
+		}
+
+		// 点击上一页
+		pageLeft.onclick = function() {
+			//如果当前是第一张图片，那么点击上一页的时候要偷偷的换到克隆位置处
+			if(index == 0) {
+				index = 5;
+				//将ul的位置定位的克隆位置处
+				ul.style.left = -index *img_width + "px"; 
+			}
+
+			index --;
+
+			animate(ul,-index*img_width);
+			//当前当前点击标签实现高亮显示
+			for(var i = 0; i < ol.children.length; i++) {
+				ol.children[i].classList.remove('current');
+			}
+			if(index >= li_count) {
+				ol.children[0].classList.add('current');
+			}else {
+				ol.children[index].classList.add('current');
+			}
+		}
+
+		//在页面中克隆一份li
+		var clone_li = ul.children[0].cloneNode(true);
+		//将克隆元素添加到ul中
+		ul.appendChild(clone_li);
+
+
+
+		//自动播放
+		var timeId = setInterval(function(){
+
+			//系统内部帮我实现点击事件
+			pageRight.click();
+
+		}, 2000);
+	</script>
+</body>
+</html>
